@@ -5,37 +5,22 @@ export async function onRequestGet({ request, env }) {
   if (name) {
     const username = name.toLowerCase().trim();
     const pubkey = await env.NIP5_KV.get(username);
-
-    if (!pubkey) {
-      return jsonResponse({ names: {} });
-    }
-
-    return jsonResponse({
-      names: {
-        [username]: pubkey
-      }
-    });
+    if (!pubkey) return json({ names: {} });
+    return json({ names: { [username]: pubkey } });
   }
 
-  // Full directory (optional)
   const list = await env.NIP5_KV.list();
   const names = {};
-
   for (const key of list.keys) {
     const val = await env.NIP5_KV.get(key.name);
     if (val) names[key.name] = val;
   }
-
-  return jsonResponse({ names });
+  return json({ names });
 }
 
-function jsonResponse(obj, status = 200) {
-  return new Response(JSON.stringify(obj, null, 2), {
+function json(obj, status=200) {
+  return new Response(JSON.stringify(obj), {
     status,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "no-store"
-    }
+    headers: { "Content-Type": "application/json" }
   });
 }
