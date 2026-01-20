@@ -1,6 +1,7 @@
 export async function onRequestPost({ request, env }) {
   try {
-    const raw = await request.text();
+    const buf = await request.arrayBuffer();
+    const raw = new TextDecoder().decode(buf);
     const body = JSON.parse(raw);
 
     let { username, pubkey } = body;
@@ -27,12 +28,12 @@ export async function onRequestPost({ request, env }) {
     await env.NIP5_KV.put(username, pubkey);
     return json({ success: true, username });
 
-  } catch {
+  } catch (e) {
     return json({ error: "Bad request" }, 400);
   }
 }
 
-function json(obj, status=200) {
+function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json" }
