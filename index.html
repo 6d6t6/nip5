@@ -1,57 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>nip5.pages.dev — NIP-05 for Nostr</title>
+  <meta name="description" content="Free NIP-05 identifiers for Nostr">
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body style="font-family:system-ui;background:#111;color:#fff;text-align:center;padding:2rem">
+<body>
+  <main class="container">
+    <h1>nip5.pages.dev</h1>
+    <p class="subtitle">Free <strong>NIP-05</strong> identifiers for Nostr</p>
 
-<h1>nip5.pages.dev</h1>
+    <div class="card">
+      <p>Register a name:</p>
+      <form>
+        <input type="text" id="username" placeholder="username" required />
+        <input type="text" id="pubkey" placeholder="npub or hex pubkey" required />
+        <button type="button" id="registerBtn">Register</button>
+      </form>
+      <pre id="output"></pre>
+    </div>
 
-<div>
-  <h3>Register</h3>
-  <input id="username" placeholder="username">
-  <input id="pubkey" placeholder="npub...">
-  <button id="registerBtn">Register</button>
-  <pre id="output"></pre>
-</div>
+    <div class="card">
+      <p>Test lookup:</p>
+      <form>
+        <input type="text" id="lookupName" placeholder="username" required />
+        <button type="button" id="lookupBtn">Lookup</button>
+      </form>
+      <pre id="lookupOutput"></pre>
+    </div>
 
-<div style="margin-top:2rem">
-  <h3>Lookup</h3>
-  <input id="lookupName" placeholder="username">
-  <button id="lookupBtn">Lookup</button>
-  <pre id="lookupOutput"></pre>
-</div>
+    <p class="small">NIP-05 endpoint: <code>/.well-known/nostr.json</code></p>
+  </main>
 
 <script>
-document.getElementById('registerBtn').onclick = async () => {
+document.getElementById('registerBtn').addEventListener('click', async () => {
   const username = document.getElementById('username').value.trim();
   const pubkey  = document.getElementById('pubkey').value.trim();
   const output  = document.getElementById('output');
 
-  output.textContent = "Sending...";
+  output.textContent = "Registering...";
 
-  const r = await fetch("/api/register",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json"},
-    body: JSON.stringify({username, pubkey})
+  const res = await fetch("/api/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, pubkey })
   });
 
-  const j = await r.json();
-  output.textContent = JSON.stringify(j, null, 2);
-};
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    output.textContent = JSON.stringify(data, null, 2);
+  } catch {
+    output.textContent = text;
+  }
+});
 
-document.getElementById('lookupBtn').onclick = async () => {
+document.getElementById('lookupBtn').addEventListener('click', async () => {
   const name = document.getElementById('lookupName').value.trim();
-  const lookupOutput = document.getElementById('lookupOutput');
+  const out  = document.getElementById('lookupOutput');
 
-  lookupOutput.textContent = "Looking up...";
+  out.textContent = "Looking up...";
 
-  const r = await fetch("/.well-known/nostr.json?name=" + encodeURIComponent(name));
-  const j = await r.json();
-  lookupOutput.textContent = JSON.stringify(j, null, 2);
-};
+  const res = await fetch("/.well-known/nostr.json?name=" + encodeURIComponent(name));
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    out.textContent = JSON.stringify(data, null, 2);
+  } catch {
+    out.textContent = text;
+  }
+});
 </script>
-
 </body>
 </html>
