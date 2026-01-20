@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>nip5.pages.dev — NIP-05 for Nostr</title>
+  <meta name="description" content="Free NIP-05 identifiers for Nostr. Claim your verified Nostr address at nip5.pages.dev">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <h1>nip5.pages.dev</h1>
+    <p class="subtitle">Free <strong>NIP-05</strong> identifiers for Nostr</p>
+
+    <div class="card">
+      <p>Get a clean, verifiable Nostr identity:</p>
+      <div class="example">yourname@nip5.pages.dev</div>
+      <p class="small">Powered by the <strong>NIP-05</strong> verification standard.</p>
+
+      <form id="claimForm">
+        <input type="text" id="username" placeholder="username" required />
+        <input type="text" id="pubkey" placeholder="npub or hex pubkey" required />
+        <button type="submit">Register</button>
+      </form>
+
+      <pre id="output"></pre>
+    </div>
+
+    <div class="card">
+      <p>Test lookup:</p>
+      <form id="lookupForm">
+        <input type="text" id="lookupName" placeholder="username" required />
+        <button type="submit">Lookup</button>
+      </form>
+      <pre id="lookupOutput"></pre>
+    </div>
+
+    <footer>
+      <p>
+        Built for the Nostr community · 
+        <a href="https://github.com/nostr-protocol/nips/blob/master/05.md" target="_blank" rel="noopener">About NIP-05</a>
+      </p>
+    </footer>
+  </main>
+
+<script>
+// Registration
+document.getElementById('claimForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const username = document.getElementById('username').value.trim();
+  const pubkey = document.getElementById('pubkey').value.trim();
+  const output = document.getElementById('output');
+
+  output.textContent = "Registering...";
+
+  const res = await fetch("/api/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, pubkey })
+  });
+
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    output.textContent = "Server error: did not return JSON. Check Functions setup.";
+    return;
+  }
+
+  if (!res.ok) {
+    output.textContent = "Error: " + data.error;
+    return;
+  }
+
+  output.textContent =
+`Success!
+
+Your NIP-05 identifier is now live:
+
+${username}@nip5.pages.dev
+
+Lookup URL:
+https://nip5.pages.dev/.well-known/nostr.json?name=${username}`;
+});
+
+// Lookup tester
+document.getElementById('lookupForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById('lookupName').value.trim();
+  const out = document.getElementById('lookupOutput');
+  out.textContent = "Looking up...";
+
+  const res = await fetch("/.well-known/nostr.json?name=" + encodeURIComponent(name));
+  const data = await res.json();
+
+  out.textContent = JSON.stringify(data, null, 2);
+});
+</script>
+</body>
+</html>
