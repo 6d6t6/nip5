@@ -1,79 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>nip5.pages.dev — NIP-05 for Nostr</title>
-  <meta name="description" content="Free NIP-05 identifiers for Nostr">
-  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <main class="container">
-    <h1>nip5.pages.dev</h1>
-    <p class="subtitle">Free <strong>NIP-05</strong> identifiers for Nostr</p>
+<body style="font-family:system-ui;background:#111;color:#fff;text-align:center;padding:2rem">
 
-    <div class="card">
-      <p>Get a clean, verifiable Nostr identity:</p>
-      <div class="example">yourname@nip5.pages.dev</div>
+<h1>nip5.pages.dev</h1>
 
-      <form id="claimForm">
-        <input type="text" id="username" placeholder="username" required />
-        <input type="text" id="pubkey" placeholder="npub or hex pubkey" required />
-        <button type="button" id="registerBtn">Register</button>
-      </form>
+<div>
+  <h3>Register</h3>
+  <input id="username" placeholder="username">
+  <input id="pubkey" placeholder="npub...">
+  <button id="registerBtn">Register</button>
+  <pre id="output"></pre>
+</div>
 
-      <pre id="output"></pre>
-    </div>
-
-    <div class="card">
-      <p>Test lookup:</p>
-      <form id="lookupForm">
-        <input type="text" id="lookupName" placeholder="username" required />
-        <button type="button" id="lookupBtn">Lookup</button>
-      </form>
-      <pre id="lookupOutput"></pre>
-    </div>
-  </main>
+<div style="margin-top:2rem">
+  <h3>Lookup</h3>
+  <input id="lookupName" placeholder="username">
+  <button id="lookupBtn">Lookup</button>
+  <pre id="lookupOutput"></pre>
+</div>
 
 <script>
-document.getElementById('registerBtn').addEventListener('click', async function() {
-  const username = document.getElementById('username').value.trim();
-  const pubkey = document.getElementById('pubkey').value.trim();
-  const output = document.getElementById('output');
-  output.textContent = "Registering...";
+document.getElementById('registerBtn').onclick = async () => {
+  const username = usernameInput.value.trim();
+  const pubkey = pubkeyInput.value.trim();
+  output.textContent = "Sending...";
 
-  const res = await fetch("/api/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, pubkey })
+  const r = await fetch("/api/register",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({username,pubkey})
   });
 
-  let data;
-  try { data = await res.json(); }
-  catch { output.textContent = "Server error: Functions not detected."; return; }
+  const j = await r.json();
+  output.textContent = JSON.stringify(j,null,2);
+};
 
-  if (!res.ok) {
-    output.textContent = "Error: " + data.error;
-    return;
-  }
-
-  output.textContent =
-`Success!
-
-${username}@nip5.pages.dev
-
-Lookup:
-https://nip5.pages.dev/.well-known/nostr.json?name=${username}`;
-});
-
-document.getElementById('lookupBtn').addEventListener('click', async function() {
-  const name = document.getElementById('lookupName').value.trim();
-  const out = document.getElementById('lookupOutput');
-  out.textContent = "Looking up...";
-  const res = await fetch("/.well-known/nostr.json?name=" + encodeURIComponent(name));
-  const data = await res.json();
-  out.textContent = JSON.stringify(data, null, 2);
-});
+document.getElementById('lookupBtn').onclick = async () => {
+  const name = lookupName.value.trim();
+  const r = await fetch("/.well-known/nostr.json?name="+encodeURIComponent(name));
+  const j = await r.json();
+  lookupOutput.textContent = JSON.stringify(j,null,2);
+};
 </script>
+
 </body>
 </html>
