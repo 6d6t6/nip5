@@ -1,7 +1,0 @@
-body{font-family:system-ui,sans-serif;background:#111;color:#fff;text-align:center;padding:2rem}
-.container{max-width:720px;margin:0 auto}
-.card{background:#1b1b1b;padding:1rem;border-radius:12px;margin:1rem 0}
-input,button{padding:.6rem;margin:.3rem}
-pre{background:#222;padding:1rem;overflow:auto;text-align:left}
-.small{opacity:.75}
-code{background:#222;padding:.15rem .35rem;border-radius:6px}
