@@ -1,34 +1,55 @@
-// build.js
-// Runs during Pages build
+// build.js — Cloudflare Pages build step
+// Reads KV and generates /.well-known/nostr.json
 
-const API = process.env.CF_PAGES_INTERNAL_KV_ENDPOINT;
-const KV_TOKEN = process.env.CF_PAGES_INTERNAL_TOKEN;
+const fs = require("fs");
 
 async function main() {
-  // Query KV directly from Pages build environment
-  const res = await fetch(`${API}/NIP5_KV/list`, {
-    headers: { "Authorization": `Bearer ${KV_TOKEN}` }
+  const ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+  const KV_ID = process.env.CF_KV_NAMESPACE_ID;
+  const API_TOKEN = process.env.CF_KV_API_TOKEN;
+
+  const BASE = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/storage/kv/namespaces/${KV_ID}`;
+
+  // List keys
+  const listRes = await fetch(`${BASE}/keys`, {
+    headers: {
+      "Authorization": `Bearer ${API_TOKEN}`
+    }
   });
 
-  const list = await res.json();
-  const names = {};
+  const listJson = await listRes.json();
 
-  for (const key of list.keys) {
-    const v = await fetch(`${API}/NIP5_KV/get/${key.name}`, {
-      headers: { "Authorization": `Bearer ${KV_TOKEN}` }
-    });
-    names[key.name] = await v.text();
+  if (!listJson.success) {
+    console.error("KV list failed:", listJson);
+    process.exit(1);
   }
 
-  const fs = require("fs");
+  const names = {};
+
+  // Fetch each value
+  for (const item of listJson.result) {
+    const keyName = item.name;
+
+    const valRes = await fetch(`${BASE}/values/${keyName}`, {
+      headers: {
+        "Authorization": `Bearer ${API_TOKEN}`
+      }
+    });
+
+    const npub = await valRes.text();
+    names[keyName] = npub;
+  }
+
+  // Ensure directory exists
   fs.mkdirSync(".well-known", { recursive: true });
 
+  // Write nostr.json
   fs.writeFileSync(
     ".well-known/nostr.json",
     JSON.stringify({ names }, null, 2)
   );
 
-  console.log("nostr.json generated");
+  console.log("nostr.json generated successfully");
 }
 
 main();
