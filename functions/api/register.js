@@ -1,6 +1,6 @@
 export async function onRequestPost({ request, env }) {
   try {
-    // Always works in Pages Functions
+    // Always reliable in Pages Functions
     const buf = await request.arrayBuffer();
     const raw = new TextDecoder().decode(buf);
     const body = JSON.parse(raw);
@@ -21,6 +21,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "Invalid pubkey format" }, 400);
     }
 
+    // ⚠️ requires KV binding
     const existing = await env.NIP5_KV.get(username);
     if (existing) {
       return json({ error: "Username already taken" }, 409);
@@ -28,16 +29,16 @@ export async function onRequestPost({ request, env }) {
 
     await env.NIP5_KV.put(username, pubkey);
 
-    return json({ success: true, username });
+    return json({ success:true, username });
 
-  } catch (err) {
+  } catch {
     return json({ error: "Bad request" }, 400);
   }
 }
 
-function json(obj, status = 200) {
+function json(obj, status=200) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { "Content-Type": "application/json" }
+    headers:{ "Content-Type":"application/json" }
   });
 }
